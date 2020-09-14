@@ -1,18 +1,18 @@
-/* 
- * Copyright 2001-2009 Terracotta, Inc. 
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not 
- * use this file except in compliance with the License. You may obtain a copy 
- * of the License at 
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0 
- *   
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+/*
+ * Copyright 2001-2009 Terracotta, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 package org.quartz.impl.jdbcjobstore;
@@ -27,16 +27,16 @@ import org.quartz.Trigger;
  * org.quartz.impl.jdbcjobstore.StdJDBCDelegate}</code>
  * class.
  * </p>
- * 
+ *
  * @author <a href="mailto:jeff@binaryfeed.org">Jeffrey Wescott</a>
  */
-public interface StdJDBCConstants extends Constants {
+public interface StdJDBCConstants extends Constants {//查询SQL
 
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
+     *
      * Constants.
-     * 
+     *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
@@ -54,7 +54,7 @@ public interface StdJDBCConstants extends Constants {
             + COL_TRIGGER_STATE
             + " = ?"
             + " WHERE "
-            + COL_SCHEDULER_NAME 
+            + COL_SCHEDULER_NAME
             + " = " + SCHED_NAME_SUBST + " AND ("
             + COL_TRIGGER_STATE
             + " = ? OR "
@@ -64,10 +64,10 @@ public interface StdJDBCConstants extends Constants {
         + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
         + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
         + " AND NOT ("
-        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND " 
+        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND "
         + COL_NEXT_FIRE_TIME + " < ? "
         + "ORDER BY " + COL_NEXT_FIRE_TIME + " ASC, " + COL_PRIORITY + " DESC";
-    
+
     String SELECT_TRIGGERS_IN_STATE = "SELECT "
             + COL_TRIGGER_NAME + ", " + COL_TRIGGER_GROUP + " FROM "
             + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
@@ -78,7 +78,7 @@ public interface StdJDBCConstants extends Constants {
         + COL_TRIGGER_NAME + ", " + COL_TRIGGER_GROUP + " FROM "
         + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
         + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST + " AND NOT ("
-        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND " 
+        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND "
         + COL_NEXT_FIRE_TIME + " < ? AND " + COL_TRIGGER_STATE + " = ? "
         + "ORDER BY " + COL_NEXT_FIRE_TIME + " ASC, " + COL_PRIORITY + " DESC";
 
@@ -86,16 +86,16 @@ public interface StdJDBCConstants extends Constants {
         + COL_TRIGGER_NAME + ") FROM "
         + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
         + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST + " AND NOT ("
-        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND " 
-        + COL_NEXT_FIRE_TIME + " < ? " 
+        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND "
+        + COL_NEXT_FIRE_TIME + " < ? "
         + "AND " + COL_TRIGGER_STATE + " = ?";
-    
+
     String SELECT_HAS_MISFIRED_TRIGGERS_IN_STATE = "SELECT "
         + COL_TRIGGER_NAME + ", " + COL_TRIGGER_GROUP + " FROM "
         + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
         + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST + " AND NOT ("
-        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND " 
-        + COL_NEXT_FIRE_TIME + " < ? " 
+        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND "
+        + COL_NEXT_FIRE_TIME + " < ? "
         + "AND " + COL_TRIGGER_STATE + " = ? "
         + "ORDER BY " + COL_NEXT_FIRE_TIME + " ASC, " + COL_PRIORITY + " DESC";
 
@@ -106,7 +106,7 @@ public interface StdJDBCConstants extends Constants {
         + TABLE_TRIGGERS
         + " WHERE "
         + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST + " AND NOT ("
-        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND " 
+        + COL_MISFIRE_INSTRUCTION + " = " + Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY + ") AND "
         + COL_NEXT_FIRE_TIME
         + " < ? AND "
         + COL_TRIGGER_GROUP
@@ -120,71 +120,71 @@ public interface StdJDBCConstants extends Constants {
             + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST;
 
     String INSERT_JOB_DETAIL = "INSERT INTO "
-            + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS + " (" 
+            + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS + " ("
             + COL_SCHEDULER_NAME + ", " + COL_JOB_NAME
             + ", " + COL_JOB_GROUP + ", " + COL_DESCRIPTION + ", "
-            + COL_JOB_CLASS + ", " + COL_IS_DURABLE + ", " 
-            + COL_IS_NONCONCURRENT +  ", " + COL_IS_UPDATE_DATA + ", " 
+            + COL_JOB_CLASS + ", " + COL_IS_DURABLE + ", "
+            + COL_IS_NONCONCURRENT +  ", " + COL_IS_UPDATE_DATA + ", "
             + COL_REQUESTS_RECOVERY + ", "
             + COL_JOB_DATAMAP + ") " + " VALUES(" + SCHED_NAME_SUBST + ", ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     String UPDATE_JOB_DETAIL = "UPDATE "
             + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS + " SET "
             + COL_DESCRIPTION + " = ?, " + COL_JOB_CLASS + " = ?, "
-            + COL_IS_DURABLE + " = ?, " 
-            + COL_IS_NONCONCURRENT + " = ?, " + COL_IS_UPDATE_DATA + " = ?, " 
+            + COL_IS_DURABLE + " = ?, "
+            + COL_IS_NONCONCURRENT + " = ?, " + COL_IS_UPDATE_DATA + " = ?, "
             + COL_REQUESTS_RECOVERY + " = ?, "
-            + COL_JOB_DATAMAP + " = ? " + " WHERE " 
-            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+            + COL_JOB_DATAMAP + " = ? " + " WHERE "
+            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_JOB_NAME
             + " = ? AND " + COL_JOB_GROUP + " = ?";
 
     String SELECT_TRIGGERS_FOR_JOB = "SELECT "
             + COL_TRIGGER_NAME + ", " + COL_TRIGGER_GROUP + " FROM "
-            + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE " 
-            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+            + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
+            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_JOB_NAME
             + " = ? AND " + COL_JOB_GROUP + " = ?";
 
     String SELECT_TRIGGERS_FOR_CALENDAR = "SELECT "
         + COL_TRIGGER_NAME + ", " + COL_TRIGGER_GROUP + " FROM "
-        + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE " 
-        + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+        + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
+        + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
         + " AND " + COL_CALENDAR_NAME
         + " = ?";
 
     String DELETE_JOB_DETAIL = "DELETE FROM "
-            + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS + " WHERE " 
-            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+            + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS + " WHERE "
+            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_JOB_NAME
             + " = ? AND " + COL_JOB_GROUP + " = ?";
 
     String SELECT_JOB_NONCONCURRENT = "SELECT "
             + COL_IS_NONCONCURRENT + " FROM " + TABLE_PREFIX_SUBST
-            + TABLE_JOB_DETAILS + " WHERE " 
-            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+            + TABLE_JOB_DETAILS + " WHERE "
+            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_JOB_NAME
             + " = ? AND " + COL_JOB_GROUP + " = ?";
 
     String SELECT_JOB_EXISTENCE = "SELECT " + COL_JOB_NAME
             + " FROM " + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS + " WHERE "
-            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_JOB_NAME
             + " = ? AND " + COL_JOB_GROUP + " = ?";
 
     String UPDATE_JOB_DATA = "UPDATE " + TABLE_PREFIX_SUBST
             + TABLE_JOB_DETAILS + " SET " + COL_JOB_DATAMAP + " = ? "
-            + " WHERE " 
-            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+            + " WHERE "
+            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_JOB_NAME
             + " = ? AND " + COL_JOB_GROUP + " = ?";
 
     String SELECT_JOB_DETAIL = "SELECT *" + " FROM "
             + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS + " WHERE "
-            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+            + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_JOB_NAME
             + " = ? AND " + COL_JOB_GROUP + " = ?";
-            
+
 
     String SELECT_NUM_JOBS = "SELECT COUNT(" + COL_JOB_NAME
             + ") " + " FROM " + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS + " WHERE "
@@ -237,13 +237,13 @@ public interface StdJDBCConstants extends Constants {
 
     String UPDATE_TRIGGER_SKIP_DATA = "UPDATE " + TABLE_PREFIX_SUBST
             + TABLE_TRIGGERS + " SET " + COL_JOB_NAME + " = ?, "
-            + COL_JOB_GROUP + " = ?, " 
+            + COL_JOB_GROUP + " = ?, "
             + COL_DESCRIPTION + " = ?, " + COL_NEXT_FIRE_TIME + " = ?, "
             + COL_PREV_FIRE_TIME + " = ?, " + COL_TRIGGER_STATE + " = ?, "
             + COL_TRIGGER_TYPE + " = ?, " + COL_START_TIME + " = ?, "
             + COL_END_TIME + " = ?, " + COL_CALENDAR_NAME + " = ?, "
-            + COL_MISFIRE_INSTRUCTION + " = ?, " + COL_PRIORITY 
-            + " = ? WHERE " 
+            + COL_MISFIRE_INSTRUCTION + " = ?, " + COL_PRIORITY
+            + " = ? WHERE "
             + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_TRIGGER_NAME
             + " = ? AND " + COL_TRIGGER_GROUP + " = ?";
@@ -255,30 +255,30 @@ public interface StdJDBCConstants extends Constants {
         + COL_PREV_FIRE_TIME + " = ?, " + COL_TRIGGER_STATE + " = ?, "
         + COL_TRIGGER_TYPE + " = ?, " + COL_START_TIME + " = ?, "
         + COL_END_TIME + " = ?, " + COL_CALENDAR_NAME + " = ?, "
-        + COL_MISFIRE_INSTRUCTION + " = ?, " + COL_PRIORITY + " = ?, " 
-        + COL_JOB_DATAMAP + " = ? WHERE " 
+        + COL_MISFIRE_INSTRUCTION + " = ?, " + COL_PRIORITY + " = ?, "
+        + COL_JOB_DATAMAP + " = ? WHERE "
         + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
         + " AND " + COL_TRIGGER_NAME + " = ? AND " + COL_TRIGGER_GROUP + " = ?";
-    
+
     String UPDATE_SIMPLE_TRIGGER = "UPDATE "
             + TABLE_PREFIX_SUBST + TABLE_SIMPLE_TRIGGERS + " SET "
             + COL_REPEAT_COUNT + " = ?, " + COL_REPEAT_INTERVAL + " = ?, "
-            + COL_TIMES_TRIGGERED + " = ? WHERE " 
+            + COL_TIMES_TRIGGERED + " = ? WHERE "
             + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_TRIGGER_NAME
             + " = ? AND " + COL_TRIGGER_GROUP + " = ?";
 
     String UPDATE_CRON_TRIGGER = "UPDATE "
             + TABLE_PREFIX_SUBST + TABLE_CRON_TRIGGERS + " SET "
-            + COL_CRON_EXPRESSION + " = ?, " + COL_TIME_ZONE_ID  
-            + " = ? WHERE " 
+            + COL_CRON_EXPRESSION + " = ?, " + COL_TIME_ZONE_ID
+            + " = ? WHERE "
             + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_TRIGGER_NAME
             + " = ? AND " + COL_TRIGGER_GROUP + " = ?";
 
     String UPDATE_BLOB_TRIGGER = "UPDATE "
             + TABLE_PREFIX_SUBST + TABLE_BLOB_TRIGGERS + " SET " + COL_BLOB
-            + " = ? WHERE " 
+            + " = ? WHERE "
             + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_TRIGGER_NAME + " = ? AND "
             + COL_TRIGGER_GROUP + " = ?";
@@ -384,8 +384,8 @@ public interface StdJDBCConstants extends Constants {
             + COL_JOB_NAME + ", J." + COL_JOB_GROUP + ", J." + COL_IS_DURABLE
             + ", J." + COL_JOB_CLASS + ", J." + COL_REQUESTS_RECOVERY + " FROM " + TABLE_PREFIX_SUBST
             + TABLE_TRIGGERS + " T, " + TABLE_PREFIX_SUBST + TABLE_JOB_DETAILS
-            + " J WHERE T." + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
-            + " AND J." + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST 
+            + " J WHERE T." + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
+            + " AND J." + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND T." + COL_TRIGGER_NAME + " = ? AND T."
             + COL_TRIGGER_GROUP + " = ? AND T." + COL_JOB_NAME + " = J."
             + COL_JOB_NAME + " AND T." + COL_JOB_GROUP + " = J."
@@ -396,12 +396,12 @@ public interface StdJDBCConstants extends Constants {
             + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_TRIGGER_NAME + " = ? AND " + COL_TRIGGER_GROUP + " = ?";
 
-    String SELECT_TRIGGER_DATA = "SELECT " + 
+    String SELECT_TRIGGER_DATA = "SELECT " +
             COL_JOB_DATAMAP + " FROM "
             + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
             + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_TRIGGER_NAME + " = ? AND " + COL_TRIGGER_GROUP + " = ?";
-        
+
     String SELECT_TRIGGER_STATE = "SELECT "
             + COL_TRIGGER_STATE + " FROM " + TABLE_PREFIX_SUBST
             + TABLE_TRIGGERS + " WHERE " + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
@@ -511,11 +511,11 @@ public interface StdJDBCConstants extends Constants {
         + COL_NEXT_FIRE_TIME + ", " + COL_PRIORITY + " FROM "
         + TABLE_PREFIX_SUBST + TABLE_TRIGGERS + " WHERE "
         + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
-        + " AND " + COL_TRIGGER_STATE + " = ? AND " + COL_NEXT_FIRE_TIME + " <= ? " 
+        + " AND " + COL_TRIGGER_STATE + " = ? AND " + COL_NEXT_FIRE_TIME + " <= ? "
         + "AND (" + COL_MISFIRE_INSTRUCTION + " = -1 OR (" +COL_MISFIRE_INSTRUCTION+ " != -1 AND "+ COL_NEXT_FIRE_TIME + " >= ?)) "
         + "ORDER BY "+ COL_NEXT_FIRE_TIME + " ASC, " + COL_PRIORITY + " DESC";
-    
-    
+
+
     String INSERT_FIRED_TRIGGER = "INSERT INTO "
             + TABLE_PREFIX_SUBST + TABLE_FIRED_TRIGGERS + " (" + COL_SCHEDULER_NAME + ", " + COL_ENTRY_ID
             + ", " + COL_TRIGGER_NAME + ", " + COL_TRIGGER_GROUP + ", "
@@ -526,7 +526,7 @@ public interface StdJDBCConstants extends Constants {
             + ") VALUES(" + SCHED_NAME_SUBST + ", ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     String UPDATE_FIRED_TRIGGER = "UPDATE "
-        + TABLE_PREFIX_SUBST + TABLE_FIRED_TRIGGERS + " SET " 
+        + TABLE_PREFIX_SUBST + TABLE_FIRED_TRIGGERS + " SET "
         + COL_INSTANCE_NAME + " = ?, "
         + COL_FIRED_TIME + " = ?, " + COL_SCHED_TIME + " = ?, " + COL_ENTRY_STATE + " = ?, " + COL_JOB_NAME
         + " = ?, " + COL_JOB_GROUP + " = ?, " + COL_IS_NONCONCURRENT + " = ?, "
@@ -604,13 +604,13 @@ public interface StdJDBCConstants extends Constants {
     String DELETE_ALL_JOB_DETAILS = "DELETE FROM " + TABLE_PREFIX_SUBST + "JOB_DETAILS" + " WHERE " + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST;
     String DELETE_ALL_CALENDARS = "DELETE FROM " + TABLE_PREFIX_SUBST + "CALENDARS" + " WHERE " + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST;
     String DELETE_ALL_PAUSED_TRIGGER_GRPS = "DELETE FROM " + TABLE_PREFIX_SUBST + "PAUSED_TRIGGER_GRPS" + " WHERE " + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST;
-    
-    String SELECT_FIRED_TRIGGER_INSTANCE_NAMES = 
+
+    String SELECT_FIRED_TRIGGER_INSTANCE_NAMES =
             "SELECT DISTINCT " + COL_INSTANCE_NAME + " FROM "
             + TABLE_PREFIX_SUBST
             + TABLE_FIRED_TRIGGERS
             + " WHERE " + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST;
-    
+
     String INSERT_SCHEDULER_STATE = "INSERT INTO "
             + TABLE_PREFIX_SUBST + TABLE_SCHEDULER_STATE + " ("
             + COL_SCHEDULER_NAME + ", "
@@ -632,7 +632,7 @@ public interface StdJDBCConstants extends Constants {
         + " AND " + COL_INSTANCE_NAME + " = ?";
 
     String UPDATE_SCHEDULER_STATE = "UPDATE "
-        + TABLE_PREFIX_SUBST + TABLE_SCHEDULER_STATE + " SET " 
+        + TABLE_PREFIX_SUBST + TABLE_SCHEDULER_STATE + " SET "
         + COL_LAST_CHECKIN_TIME + " = ? WHERE "
         + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
         + " AND " + COL_INSTANCE_NAME + " = ?";
@@ -644,7 +644,7 @@ public interface StdJDBCConstants extends Constants {
 
     String SELECT_PAUSED_TRIGGER_GROUP = "SELECT "
             + COL_TRIGGER_GROUP + " FROM " + TABLE_PREFIX_SUBST
-            + TABLE_PAUSED_TRIGGERS + " WHERE " 
+            + TABLE_PAUSED_TRIGGERS + " WHERE "
             + COL_SCHEDULER_NAME + " = " + SCHED_NAME_SUBST
             + " AND " + COL_TRIGGER_GROUP + " = ?";
 

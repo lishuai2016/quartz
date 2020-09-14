@@ -1,18 +1,18 @@
-/* 
- * Copyright 2001-2009 Terracotta, Inc. 
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not 
- * use this file except in compliance with the License. You may obtain a copy 
- * of the License at 
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0 
- *   
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+/*
+ * Copyright 2001-2009 Terracotta, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 package org.quartz.simpl;
@@ -32,27 +32,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * This is class is a simple implementation of a thread pool, based on the
  * <code>{@link org.quartz.spi.ThreadPool}</code> interface.
  * </p>
- * 
+ *
  * <p>
  * <CODE>Runnable</CODE> objects are sent to the pool with the <code>{@link #runInThread(Runnable)}</code>
  * method, which blocks until a <code>Thread</code> becomes available.
  * </p>
- * 
+ *
  * <p>
  * The pool has a fixed number of <code>Thread</code>s, and does not grow or
  * shrink based on demand.
  * </p>
- * 
+ *
  * @author James House
  * @author Juergen Donnerstag
  */
-public class SimpleThreadPool implements ThreadPool {
+public class SimpleThreadPool implements ThreadPool {//线程池
 
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
+     *
      * Data members.
-     * 
+     *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
@@ -73,21 +73,21 @@ public class SimpleThreadPool implements ThreadPool {
 
     private final Object nextRunnableLock = new Object();
 
-    private List<WorkerThread> workers;
-    private LinkedList<WorkerThread> availWorkers = new LinkedList<WorkerThread>();
-    private LinkedList<WorkerThread> busyWorkers = new LinkedList<WorkerThread>();
+    private List<WorkerThread> workers;//所有工作线程
+    private LinkedList<WorkerThread> availWorkers = new LinkedList<WorkerThread>();//空闲
+    private LinkedList<WorkerThread> busyWorkers = new LinkedList<WorkerThread>();//正在执行job的线程
 
     private String threadNamePrefix;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private String schedulerInstanceName;
 
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
+     *
      * Constructors.
-     * 
+     *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
@@ -95,7 +95,7 @@ public class SimpleThreadPool implements ThreadPool {
      * <p>
      * Create a new (unconfigured) <code>SimpleThreadPool</code>.
      * </p>
-     * 
+     *
      * @see #setThreadCount(int)
      * @see #setThreadPriority(int)
      */
@@ -107,13 +107,13 @@ public class SimpleThreadPool implements ThreadPool {
      * Create a new <code>SimpleThreadPool</code> with the specified number
      * of <code>Thread</code> s that have the given priority.
      * </p>
-     * 
+     *
      * @param threadCount
      *          the number of worker <code>Threads</code> in the pool, must
      *          be > 0.
      * @param threadPriority
      *          the thread priority for the worker threads.
-     * 
+     *
      * @see java.lang.Thread
      */
     public SimpleThreadPool(int threadCount, int threadPriority) {
@@ -123,9 +123,9 @@ public class SimpleThreadPool implements ThreadPool {
 
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
+     *
      * Interface.
-     * 
+     *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
@@ -225,7 +225,7 @@ public class SimpleThreadPool implements ThreadPool {
     public void setMakeThreadsDaemons(boolean makeThreadsDaemons) {
         this.makeThreadsDaemons = makeThreadsDaemons;
     }
-    
+
     public void setInstanceId(String schedInstId) {
     }
 
@@ -237,7 +237,7 @@ public class SimpleThreadPool implements ThreadPool {
 
         if(workers != null && workers.size() > 0) // already initialized...
             return;
-        
+
         if (count <= 0) {
             throw new SchedulerConfigException(
                     "Thread count must be > 0");
@@ -246,7 +246,7 @@ public class SimpleThreadPool implements ThreadPool {
             throw new SchedulerConfigException(
                     "Thread priority must be > 0 and <= 9");
         }
-
+        //初始化线程组
         if(isThreadsInheritGroupOfInitializingThread()) {
             threadGroup = Thread.currentThread().getThreadGroup();
         } else {
@@ -270,12 +270,12 @@ public class SimpleThreadPool implements ThreadPool {
                             + Thread.currentThread().getName());
         }
 
-        // create the worker threads and start them
+        // create the worker threads and start them 创建指定数量的线程
         Iterator<WorkerThread> workerThreads = createWorkerThreads(count).iterator();
         while(workerThreads.hasNext()) {
             WorkerThread wt = workerThreads.next();
-            wt.start();
-            availWorkers.add(wt);
+            wt.start();//启动线程
+            availWorkers.add(wt);//添加到空闲列表
         }
     }
 
@@ -304,7 +304,7 @@ public class SimpleThreadPool implements ThreadPool {
      * <p>
      * Terminate any worker threads in this thread group.
      * </p>
-     * 
+     *
      * <p>
      * Jobs currently in progress will complete.
      * </p>
@@ -317,7 +317,7 @@ public class SimpleThreadPool implements ThreadPool {
      * <p>
      * Terminate any worker threads in this thread group.
      * </p>
-     * 
+     *
      * <p>
      * Jobs currently in progress will complete.
      * </p>
@@ -403,11 +403,11 @@ public class SimpleThreadPool implements ThreadPool {
      * shut down, the Runnable is executed immediately within a new additional
      * thread.
      * </p>
-     * 
+     *
      * @param runnable
      *          the <code>Runnable</code> to be added.
      */
-    public boolean runInThread(Runnable runnable) {
+    public boolean runInThread(Runnable runnable) {//分配任务给线程池中的线程入口
         if (runnable == null) {
             return false;
         }
@@ -417,7 +417,7 @@ public class SimpleThreadPool implements ThreadPool {
             handoffPending = true;
 
             // Wait until a worker thread is available
-            while ((availWorkers.size() < 1) && !isShutdown) {
+            while ((availWorkers.size() < 1) && !isShutdown) {//没有空闲线程阻塞等待
                 try {
                     nextRunnableLock.wait(500);
                 } catch (InterruptedException ignore) {
@@ -425,9 +425,9 @@ public class SimpleThreadPool implements ThreadPool {
             }
 
             if (!isShutdown) {
-                WorkerThread wt = (WorkerThread)availWorkers.removeFirst();
-                busyWorkers.add(wt);
-                wt.run(runnable);
+                WorkerThread wt = (WorkerThread)availWorkers.removeFirst();//取出空闲列表的第一个
+                busyWorkers.add(wt);//放到busy列表
+                wt.run(runnable);//开始调用任务
             } else {
                 // If the thread pool is going down, execute the Runnable
                 // within a new additional worker thread (no thread from the pool).
@@ -477,9 +477,9 @@ public class SimpleThreadPool implements ThreadPool {
 
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
+     *
      * WorkerThread Class.
-     * 
+     *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
@@ -498,7 +498,7 @@ public class SimpleThreadPool implements ThreadPool {
         private SimpleThreadPool tp;
 
         private Runnable runnable = null;
-        
+
         private boolean runOnce = false;
 
         /**
@@ -558,19 +558,20 @@ public class SimpleThreadPool implements ThreadPool {
          * </p>
          */
         @Override
-        public void run() {
+        public void run() {// 工作线程一旦启动，将一直运行此方法
             boolean ran = false;
-            
-            while (run.get()) {
+
+            while (run.get()) {// 工作线程一直循环等待job，直到线程被关闭
                 try {
                     synchronized(lock) {
+                        // 锁住lock，不断循环等待job，当job要被执行时，WorkerThread.run(Runnable)被调用，job运行环境被赋值给runnable
                         while (runnable == null && run.get()) {
                             lock.wait(500);
                         }
 
                         if (runnable != null) {
                             ran = true;
-                            runnable.run();
+                            runnable.run();//运行业务逻辑
                         }
                     }
                 } catch (InterruptedException unblock) {
@@ -596,12 +597,12 @@ public class SimpleThreadPool implements ThreadPool {
                         setPriority(tp.getThreadPriority());
                     }
 
-                    if (runOnce) {
+                    if (runOnce) {//默认false
                            run.set(false);
                         clearFromBusyWorkersList(this);
-                    } else if(ran) {
+                    } else if(ran) {//执行完一个任务后标记位true
                         ran = false;
-                        makeAvailable(this);
+                        makeAvailable(this);//把当前线程放回空闲线程池，并唤醒阻塞的等待
                     }
 
                 }

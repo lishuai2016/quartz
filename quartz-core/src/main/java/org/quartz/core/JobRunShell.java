@@ -67,7 +67,7 @@ public class JobRunShell extends SchedulerListenerSupport implements Runnable {
     protected JobExecutionContextImpl jec = null;
 
     protected QuartzScheduler qs = null;
-    
+
     protected TriggerFiredBundle firedTriggerBundle = null;
 
     protected Scheduler scheduler = null;
@@ -124,7 +124,7 @@ public class JobRunShell extends SchedulerListenerSupport implements Runnable {
         JobDetail jobDetail = firedTriggerBundle.getJobDetail();
 
         try {
-            job = sched.getJobFactory().newJob(firedTriggerBundle, scheduler);
+            job = sched.getJobFactory().newJob(firedTriggerBundle, scheduler);//
         } catch (SchedulerException se) {
             sched.notifySchedulerListenersError(
                     "An error occured instantiating job to be executed. job= '"
@@ -177,7 +177,7 @@ public class JobRunShell extends SchedulerListenerSupport implements Runnable {
                     try {
                         CompletedExecutionInstruction instCode = trigger.executionComplete(jec, null);
                         qs.notifyJobStoreJobVetoed(trigger, jobDetail, instCode);
-                        
+
                         // QTZ-205
                         // Even if trigger got vetoed, we still needs to check to see if it's the trigger's finalized run or not.
                         if (jec.getTrigger().getNextFireTime() == null) {

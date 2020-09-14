@@ -1,18 +1,18 @@
-/* 
- * Copyright 2001-2009 Terracotta, Inc. 
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not 
- * use this file except in compliance with the License. You may obtain a copy 
- * of the License at 
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0 
- *   
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+/*
+ * Copyright 2001-2009 Terracotta, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 
 package org.quartz.simpl;
@@ -64,14 +64,14 @@ import static org.quartz.impl.matchers.EverythingMatcher.allTriggers;
  * This class implements a <code>{@link org.quartz.spi.JobStore}</code> that
  * utilizes RAM as its storage device.
  * </p>
- * 
+ *
  * <p>
  * As you should know, the ramification of this is that access is extrememly
  * fast, but the data is completely volatile - therefore this <code>JobStore</code>
  * should not be used if true persistence between program shutdowns is
  * required.
  * </p>
- * 
+ *
  * @author James House
  * @author Sharada Jambula
  * @author Eric Mueller
@@ -80,34 +80,34 @@ public class RAMJobStore implements JobStore {
 
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
+     *
      * Data members.
-     * 
+     *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
     protected HashMap<JobKey, JobWrapper> jobsByKey = new HashMap<JobKey, JobWrapper>(1000);
-
+    //添加保存1：按照触发key保存的
     protected HashMap<TriggerKey, TriggerWrapper> triggersByKey = new HashMap<TriggerKey, TriggerWrapper>(1000);
 
     protected HashMap<String, HashMap<JobKey, JobWrapper>> jobsByGroup = new HashMap<String, HashMap<JobKey, JobWrapper>>(25);
-
-    protected HashMap<String, HashMap<TriggerKey, TriggerWrapper>> triggersByGroup = new HashMap<String, HashMap<TriggerKey, TriggerWrapper>>(25);
-
+    //添加保存2：按照触发的分组保存的
+    protected HashMap<String, HashMap<TriggerKey, TriggerWrapper>> triggersByGroup = new HashMap<String, HashMap<TriggerKey, TriggerWrapper>>(25);//
+    //添加保存4：触发时间tree（重点）基于触发时间排序，最近执行的在开头
     protected TreeSet<TriggerWrapper> timeTriggers = new TreeSet<TriggerWrapper>(new TriggerWrapperComparator());
 
     protected HashMap<String, Calendar> calendarsByName = new HashMap<String, Calendar>(25);
-
+    //添加保存3：直接保存list
     protected ArrayList<TriggerWrapper> triggers = new ArrayList<TriggerWrapper>(1000);
 
     protected final Object lock = new Object();
 
-    protected HashSet<String> pausedTriggerGroups = new HashSet<String>();
+    protected HashSet<String> pausedTriggerGroups = new HashSet<String>();//暂停的trigger分组
 
-    protected HashSet<String> pausedJobGroups = new HashSet<String>();
+    protected HashSet<String> pausedJobGroups = new HashSet<String>();//暂停的job分组
 
-    protected HashSet<JobKey> blockedJobs = new HashSet<JobKey>();
-    
+    protected HashSet<JobKey> blockedJobs = new HashSet<JobKey>();//阻塞的分组
+
     protected long misfireThreshold = 5000l;
 
     protected SchedulerSignaler signaler;
@@ -116,9 +116,9 @@ public class RAMJobStore implements JobStore {
 
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
+     *
      * Constructors.
-     * 
+     *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
@@ -132,9 +132,9 @@ public class RAMJobStore implements JobStore {
 
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * 
+     *
      * Interface.
-     * 
+     *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
@@ -162,11 +162,11 @@ public class RAMJobStore implements JobStore {
     public void schedulerPaused() {
         // nothing to do
     }
-    
+
     public void schedulerResumed() {
         // nothing to do
     }
-    
+
     public long getMisfireThreshold() {
         return misfireThreshold;
     }
@@ -175,7 +175,7 @@ public class RAMJobStore implements JobStore {
      * The number of milliseconds by which a trigger must have missed its
      * next-fire-time, in order for it to be considered "misfired" and thus
      * have its misfire instruction applied.
-     * 
+     *
      * @param misfireThreshold the new misfire threshold
      */
     @SuppressWarnings("UnusedDeclaration")
@@ -203,7 +203,7 @@ public class RAMJobStore implements JobStore {
     /**
      * Clear (delete!) all scheduling data - all {@link Job}s, {@link Trigger}s
      * {@link Calendar}s.
-     * 
+     *
      * @throws JobPersistenceException
      */
     public void clearAllSchedulingData() throws JobPersistenceException {
@@ -232,12 +232,12 @@ public class RAMJobStore implements JobStore {
             }
         }
     }
-    
+
     /**
      * <p>
      * Store the given <code>{@link org.quartz.JobDetail}</code> and <code>{@link org.quartz.Trigger}</code>.
      * </p>
-     * 
+     *
      * @param newJob
      *          The <code>JobDetail</code> to be stored.
      * @param newTrigger
@@ -248,15 +248,15 @@ public class RAMJobStore implements JobStore {
      */
     public void storeJobAndTrigger(JobDetail newJob,
             OperableTrigger newTrigger) throws JobPersistenceException {
-        storeJob(newJob, false);
-        storeTrigger(newTrigger, false);
+        storeJob(newJob, false);//存储job信息
+        storeTrigger(newTrigger, false);//存储触发器信息
     }
 
     /**
      * <p>
      * Store the given <code>{@link org.quartz.Job}</code>.
      * </p>
-     * 
+     *
      * @param newJob
      *          The <code>Job</code> to be stored.
      * @param replaceExisting
@@ -320,7 +320,7 @@ public class RAMJobStore implements JobStore {
                 this.removeTrigger(trig.getKey());
                 found = true;
             }
-            
+
             found = (jobsByKey.remove(jobKey) != null) | found;
             if (found) {
 
@@ -385,7 +385,7 @@ public class RAMJobStore implements JobStore {
                 }
             }
         }
-        
+
     }
 
     /**
@@ -407,45 +407,45 @@ public class RAMJobStore implements JobStore {
      */
     public void storeTrigger(OperableTrigger newTrigger,
             boolean replaceExisting) throws JobPersistenceException {
-        TriggerWrapper tw = new TriggerWrapper((OperableTrigger)newTrigger.clone());
+        TriggerWrapper tw = new TriggerWrapper((OperableTrigger)newTrigger.clone());//赋值一个
 
         synchronized (lock) {
-            if (triggersByKey.get(tw.key) != null) {
+            if (triggersByKey.get(tw.key) != null) {//trigger的name和group，重复check
                 if (!replaceExisting) {
                     throw new ObjectAlreadyExistsException(newTrigger);
                 }
-    
+
                 removeTrigger(newTrigger.getKey(), false);
             }
-    
+
             if (retrieveJob(newTrigger.getJobKey()) == null) {
                 throw new JobPersistenceException("The job ("
                         + newTrigger.getJobKey()
                         + ") referenced by the trigger does not exist.");
             }
 
-            // add to triggers array
+            // add to triggers array  list中存一份
             triggers.add(tw);
-            // add to triggers by group
+            // add to triggers by group   按照group分组存一份
             HashMap<TriggerKey, TriggerWrapper> grpMap = triggersByGroup.get(newTrigger.getKey().getGroup());
             if (grpMap == null) {
                 grpMap = new HashMap<TriggerKey, TriggerWrapper>(100);
                 triggersByGroup.put(newTrigger.getKey().getGroup(), grpMap);
             }
             grpMap.put(newTrigger.getKey(), tw);
-            // add to triggers by FQN map
+            // add to triggers by FQN map   存一份map
             triggersByKey.put(tw.key, tw);
 
             if (pausedTriggerGroups.contains(newTrigger.getKey().getGroup())
-                    || pausedJobGroups.contains(newTrigger.getJobKey().getGroup())) {
+                    || pausedJobGroups.contains(newTrigger.getJobKey().getGroup())) {//暂停的分组
                 tw.state = TriggerWrapper.STATE_PAUSED;
                 if (blockedJobs.contains(tw.jobKey)) {
                     tw.state = TriggerWrapper.STATE_PAUSED_BLOCKED;
                 }
-            } else if (blockedJobs.contains(tw.jobKey)) {
+            } else if (blockedJobs.contains(tw.jobKey)) {//阻塞的分组
                 tw.state = TriggerWrapper.STATE_BLOCKED;
             } else {
-                timeTriggers.add(tw);
+                timeTriggers.add(tw);//正常情况
             }
         }
     }
@@ -462,7 +462,7 @@ public class RAMJobStore implements JobStore {
     public boolean removeTrigger(TriggerKey triggerKey) {
         return removeTrigger(triggerKey, true);
     }
-    
+
     private boolean removeTrigger(TriggerKey key, boolean removeOrphanedJob) {
 
         boolean found;
@@ -583,15 +583,15 @@ public class RAMJobStore implements JobStore {
     public OperableTrigger retrieveTrigger(TriggerKey triggerKey) {
         synchronized(lock) {
             TriggerWrapper tw = triggersByKey.get(triggerKey);
-    
+
             return (tw != null) ? (OperableTrigger)tw.getTrigger().clone() : null;
         }
     }
-    
+
     /**
-     * Determine whether a {@link Job} with the given identifier already 
+     * Determine whether a {@link Job} with the given identifier already
      * exists within the scheduler.
-     * 
+     *
      * @param jobKey the identifier to check for
      * @return true if a Job exists with the given identifier
      * @throws JobPersistenceException
@@ -602,11 +602,11 @@ public class RAMJobStore implements JobStore {
             return (jw != null);
         }
     }
-    
+
     /**
-     * Determine whether a {@link Trigger} with the given identifier already 
+     * Determine whether a {@link Trigger} with the given identifier already
      * exists within the scheduler.
-     * 
+     *
      * @param triggerKey the identifier to check for
      * @return true if a Trigger exists with the given identifier
      * @throws JobPersistenceException
@@ -614,11 +614,11 @@ public class RAMJobStore implements JobStore {
     public boolean checkExists(TriggerKey triggerKey) throws JobPersistenceException {
         synchronized(lock) {
             TriggerWrapper tw = triggersByKey.get(triggerKey);
-    
+
             return (tw != null);
         }
     }
- 
+
     /**
      * <p>
      * Get the current state of the identified <code>{@link Trigger}</code>.
@@ -634,31 +634,31 @@ public class RAMJobStore implements JobStore {
     public TriggerState getTriggerState(TriggerKey triggerKey) throws JobPersistenceException {
         synchronized(lock) {
             TriggerWrapper tw = triggersByKey.get(triggerKey);
-            
+
             if (tw == null) {
                 return TriggerState.NONE;
             }
-    
+
             if (tw.state == TriggerWrapper.STATE_COMPLETE) {
                 return TriggerState.COMPLETE;
             }
-    
+
             if (tw.state == TriggerWrapper.STATE_PAUSED) {
                 return TriggerState.PAUSED;
             }
-    
+
             if (tw.state == TriggerWrapper.STATE_PAUSED_BLOCKED) {
                 return TriggerState.PAUSED;
             }
-    
+
             if (tw.state == TriggerWrapper.STATE_BLOCKED) {
                 return TriggerState.BLOCKED;
             }
-    
+
             if (tw.state == TriggerWrapper.STATE_ERROR) {
                 return TriggerState.ERROR;
             }
-    
+
             return TriggerState.NORMAL;
         }
     }
@@ -688,20 +688,20 @@ public class RAMJobStore implements JobStore {
         throws ObjectAlreadyExistsException {
 
         calendar = (Calendar) calendar.clone();
-        
+
         synchronized (lock) {
-    
+
             Object obj = calendarsByName.get(name);
-    
+
             if (obj != null && !replaceExisting) {
                 throw new ObjectAlreadyExistsException(
                     "Calendar with name '" + name + "' already exists.");
             } else if (obj != null) {
                 calendarsByName.remove(name);
             }
-    
+
             calendarsByName.put(name, calendar);
-    
+
             if(obj != null && updateTriggers) {
                 for (TriggerWrapper tw : getTriggerWrappersForCalendar(name)) {
                     OperableTrigger trig = tw.getTrigger();
@@ -1014,12 +1014,12 @@ public class RAMJobStore implements JobStore {
 
         synchronized (lock) {
             TriggerWrapper tw = triggersByKey.get(triggerKey);
-    
+
             // does the trigger exist?
             if (tw == null || tw.trigger == null) {
                 return;
             }
-    
+
             // if the trigger is "complete" pausing it does not make sense...
             if (tw.state == TriggerWrapper.STATE_COMPLETE) {
                 return;
@@ -1161,14 +1161,14 @@ public class RAMJobStore implements JobStore {
 
         synchronized (lock) {
             TriggerWrapper tw = triggersByKey.get(triggerKey);
-    
+
             // does the trigger exist?
             if (tw == null || tw.trigger == null) {
                 return;
             }
-    
+
             OperableTrigger trig = tw.getTrigger();
-    
+
             // if the trigger is not paused resuming it does not make sense...
             if (tw.state != TriggerWrapper.STATE_PAUSED &&
                     tw.state != TriggerWrapper.STATE_PAUSED_BLOCKED) {
@@ -1341,9 +1341,9 @@ public class RAMJobStore implements JobStore {
         }
 
         Date tnft = tw.trigger.getNextFireTime();
-        if (tnft == null || tnft.getTime() > misfireTime 
-                || tw.trigger.getMisfireInstruction() == Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY) { 
-            return false; 
+        if (tnft == null || tnft.getTime() > misfireTime
+                || tw.trigger.getMisfireInstruction() == Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY) {
+            return false;
         }
 
         Calendar cal = null;
@@ -1379,53 +1379,53 @@ public class RAMJobStore implements JobStore {
      * Get a handle to the next trigger to be fired, and mark it as 'reserved'
      * by the calling scheduler.
      * </p>
-     *
+     * 查找一批要执行的trigger
      * @see #releaseAcquiredTrigger(OperableTrigger)
      */
     public List<OperableTrigger> acquireNextTriggers(long noLaterThan, int maxCount, long timeWindow) {
         synchronized (lock) {
             List<OperableTrigger> result = new ArrayList<OperableTrigger>();
-            Set<JobKey> acquiredJobKeysForNoConcurrentExec = new HashSet<JobKey>();
-            Set<TriggerWrapper> excludedTriggers = new HashSet<TriggerWrapper>();
-            long firstAcquiredTriggerFireTime = 0;
-            
+            Set<JobKey> acquiredJobKeysForNoConcurrentExec = new HashSet<JobKey>();//处理并发处理标记
+            Set<TriggerWrapper> excludedTriggers = new HashSet<TriggerWrapper>();//
+            long firstAcquiredTriggerFireTime = 0;//作用？？
+
             // return empty list if store has no triggers.
-            if (timeTriggers.size() == 0)
+            if (timeTriggers.size() == 0)//说明没有要触发的
                 return result;
-            
+
             while (true) {
                 TriggerWrapper tw;
 
                 try {
                     tw = timeTriggers.first();
                     if (tw == null)
-                        break;
+                        break;//
                     timeTriggers.remove(tw);
                 } catch (java.util.NoSuchElementException nsee) {
                     break;
                 }
 
-                if (tw.trigger.getNextFireTime() == null) {
+                if (tw.trigger.getNextFireTime() == null) {//下一次触发的时间为空，跳过
                     continue;
                 }
 
-                if (applyMisfire(tw)) {
-                    if (tw.trigger.getNextFireTime() != null) {
+                if (applyMisfire(tw)) {//错过触发时机
+                    if (tw.trigger.getNextFireTime() != null) {//重新加入
                         timeTriggers.add(tw);
                     }
                     continue;
                 }
-
+                //最小的触发时机在本次轮询的时间范围外，直接结束本次查询
                 if (tw.getTrigger().getNextFireTime().getTime() > noLaterThan + timeWindow) {
                     timeTriggers.add(tw);
-                    break;
+                    break;//
                 }
-                
+
                 // If trigger's job is set as @DisallowConcurrentExecution, and it has already been added to result, then
                 // put it back into the timeTriggers set and continue to search for next trigger.
                 JobKey jobKey = tw.trigger.getJobKey();
                 JobDetail job = jobsByKey.get(tw.trigger.getJobKey()).jobDetail;
-                if (job.isConcurrentExectionDisallowed()) {
+                if (job.isConcurrentExectionDisallowed()) {//是否允许并发处理
                     if (acquiredJobKeysForNoConcurrentExec.contains(jobKey)) {
                         excludedTriggers.add(tw);
                         continue; // go to next trigger in store.
@@ -1435,19 +1435,19 @@ public class RAMJobStore implements JobStore {
                 }
 
                 tw.state = TriggerWrapper.STATE_ACQUIRED;
-                tw.trigger.setFireInstanceId(getFiredTriggerRecordId());
-                OperableTrigger trig = (OperableTrigger) tw.trigger.clone();
+                tw.trigger.setFireInstanceId(getFiredTriggerRecordId());//设置触发id，自增的
+                OperableTrigger trig = (OperableTrigger) tw.trigger.clone();//复制一份添加到结果集
                 result.add(trig);
-                if(firstAcquiredTriggerFireTime == 0)
+                if(firstAcquiredTriggerFireTime == 0) //第一次循环更新最小的触发时间
                     firstAcquiredTriggerFireTime = tw.trigger.getNextFireTime().getTime();
 
                 if (result.size() == maxCount)
-                    break;
+                    break;//达到了一次获取的最大数量，跳出
             }
-            
+
             // If we did excluded triggers to prevent ACQUIRE state due to DisallowConcurrentExecution, we need to add them back to store.
             if (excludedTriggers.size() > 0)
-                timeTriggers.addAll(excludedTriggers);
+                timeTriggers.addAll(excludedTriggers);//针对并发调度放回池中
             return result;
         }
     }
@@ -1483,26 +1483,26 @@ public class RAMJobStore implements JobStore {
 
             for (OperableTrigger trigger : firedTriggers) {
                 TriggerWrapper tw = triggersByKey.get(trigger.getKey());
-                // was the trigger deleted since being acquired?
+                // was the trigger deleted since being acquired?  有可能之前创建的被删除了
                 if (tw == null || tw.trigger == null) {
                     continue;
                 }
-                // was the trigger completed, paused, blocked, etc. since being acquired?
+                // was the trigger completed, paused, blocked, etc. since being acquired? 已经被触发了或者暂停阻塞等
                 if (tw.state != TriggerWrapper.STATE_ACQUIRED) {
                     continue;
                 }
 
                 Calendar cal = null;
-                if (tw.trigger.getCalendarName() != null) {
+                if (tw.trigger.getCalendarName() != null) {//可能设置了排查某些时间点执行
                     cal = retrieveCalendar(tw.trigger.getCalendarName());
                     if(cal == null)
                         continue;
                 }
-                Date prevFireTime = trigger.getPreviousFireTime();
+                Date prevFireTime = trigger.getPreviousFireTime();//上一次触发的时间
                 // in case trigger was replaced between acquiring and firing
-                timeTriggers.remove(tw);
+                timeTriggers.remove(tw);//从时间排序tree中移除
                 // call triggered on our copy, and the scheduler's copy
-                tw.trigger.triggered(cal);
+                tw.trigger.triggered(cal);//计算下一次触发的时间
                 trigger.triggered(cal);
                 //tw.state = TriggerWrapper.STATE_EXECUTING;
                 tw.state = TriggerWrapper.STATE_WAITING;
@@ -1512,9 +1512,9 @@ public class RAMJobStore implements JobStore {
                         false, new Date(), trigger.getPreviousFireTime(), prevFireTime,
                         trigger.getNextFireTime());
 
-                JobDetail job = bndle.getJobDetail();
+                JobDetail job = bndle.getJobDetail();//job的详细信息
 
-                if (job.isConcurrentExectionDisallowed()) {
+                if (job.isConcurrentExectionDisallowed()) {//开启可禁止并发调度
                     ArrayList<TriggerWrapper> trigs = getTriggerWrappersForJob(job.getKey());
                     for (TriggerWrapper ttw : trigs) {
                         if (ttw.state == TriggerWrapper.STATE_WAITING) {
@@ -1526,7 +1526,7 @@ public class RAMJobStore implements JobStore {
                         timeTriggers.remove(ttw);
                     }
                     blockedJobs.add(job.getKey());
-                } else if (tw.trigger.getNextFireTime() != null) {
+                } else if (tw.trigger.getNextFireTime() != null) {//允许并发调度，重新放回时间树中，用于下次再调度
                     synchronized (lock) {
                         timeTriggers.add(tw);
                     }
@@ -1588,13 +1588,13 @@ public class RAMJobStore implements JobStore {
             } else { // even if it was deleted, there may be cleanup to do
                 blockedJobs.remove(jobDetail.getKey());
             }
-    
+
             // check for trigger deleted during execution...
             if (tw != null) {
                 if (triggerInstCode == CompletedExecutionInstruction.DELETE_TRIGGER) {
-                    
+
                     if(trigger.getNextFireTime() == null) {
-                        // double check for possible reschedule within job 
+                        // double check for possible reschedule within job
                         // execution, which would cancel the need to delete...
                         if(tw.getTrigger().getNextFireTime() == null) {
                             removeTrigger(trigger.getKey());
@@ -1612,7 +1612,7 @@ public class RAMJobStore implements JobStore {
                     tw.state = TriggerWrapper.STATE_ERROR;
                     signaler.signalSchedulingChange(0L);
                 } else if (triggerInstCode == CompletedExecutionInstruction.SET_ALL_JOB_TRIGGERS_ERROR) {
-                    getLog().info("All triggers of Job " 
+                    getLog().info("All triggers of Job "
                             + trigger.getJobKey() + " set to ERROR state.");
                     setAllTriggersOfJobToState(trigger.getJobKey(), TriggerWrapper.STATE_ERROR);
                     signaler.signalSchedulingChange(0L);
@@ -1633,7 +1633,7 @@ public class RAMJobStore implements JobStore {
             }
         }
     }
-    
+
     @SuppressWarnings("UnusedDeclaration")
     protected String peekTriggers() {
 
@@ -1656,14 +1656,14 @@ public class RAMJobStore implements JobStore {
         return str.toString();
     }
 
-    /** 
+    /**
      * @see org.quartz.spi.JobStore#getPausedTriggerGroups()
      */
     public Set<String> getPausedTriggerGroups() throws JobPersistenceException {
         HashSet<String> set = new HashSet<String>();
-        
+
         set.addAll(pausedTriggerGroups);
-        
+
         return set;
     }
 
@@ -1691,16 +1691,16 @@ public class RAMJobStore implements JobStore {
 
 /*******************************************************************************
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * 
+ *
  * Helper Classes. * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
 
 class TriggerWrapperComparator implements Comparator<TriggerWrapper>, java.io.Serializable {
-  
+
     private static final long serialVersionUID = 8809557142191514261L;
 
-    TriggerTimeComparator ttc = new TriggerTimeComparator();
-    
+    TriggerTimeComparator ttc = new TriggerTimeComparator();//
+
     public int compare(TriggerWrapper trig1, TriggerWrapper trig2) {
         return ttc.compare(trig1.trigger, trig2.trigger);
     }
@@ -1738,10 +1738,10 @@ class JobWrapper {
 
         return false;
     }
-    
+
     @Override
     public int hashCode() {
-        return key.hashCode(); 
+        return key.hashCode();
     }
 }
 
@@ -1751,7 +1751,7 @@ class TriggerWrapper {
 
     public final JobKey jobKey;
 
-    public final OperableTrigger trigger;
+    public final OperableTrigger trigger;//被包裹的对象
 
     public int state = STATE_WAITING;
 
@@ -1771,7 +1771,7 @@ class TriggerWrapper {
     public static final int STATE_PAUSED_BLOCKED = 6;
 
     public static final int STATE_ERROR = 7;
-    
+
     TriggerWrapper(OperableTrigger trigger) {
         if(trigger == null)
             throw new IllegalArgumentException("Trigger cannot be null!");
@@ -1794,10 +1794,10 @@ class TriggerWrapper {
 
     @Override
     public int hashCode() {
-        return key.hashCode(); 
+        return key.hashCode();
     }
 
-    
+
     public OperableTrigger getTrigger() {
         return this.trigger;
     }

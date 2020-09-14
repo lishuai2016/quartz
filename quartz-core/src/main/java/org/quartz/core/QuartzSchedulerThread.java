@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author James House
  */
-public class QuartzSchedulerThread extends Thread {
+public class QuartzSchedulerThread extends Thread {//
     /*
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      *
@@ -53,13 +53,13 @@ public class QuartzSchedulerThread extends Thread {
      *
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
-    private QuartzScheduler qs;
+    private QuartzScheduler qs;//调取器
 
-    private QuartzSchedulerResources qsRsrcs;
+    private QuartzSchedulerResources qsRsrcs;//
 
-    private final Object sigLock = new Object();
+    private final Object sigLock = new Object();//设计到trigger和job的增删改等变化都可能触发sigLock.notifyall()唤醒等待的线程
 
-    private boolean signaled;
+    private boolean signaled;//被唤醒设置的标记
     private long signaledNextFireTime;
 
     private boolean paused;
@@ -105,7 +105,7 @@ public class QuartzSchedulerThread extends Thread {
      * </p>
      */
     QuartzSchedulerThread(QuartzScheduler qs, QuartzSchedulerResources qsRsrcs, boolean setDaemon, int threadPrio) {
-        super(qs.getSchedulerThreadGroup(), qsRsrcs.getThreadName());
+        super(qs.getSchedulerThreadGroup(), qsRsrcs.getThreadName());//设置线程组和线程的名字
         this.qs = qs;
         this.qsRsrcs = qsRsrcs;
         this.setDaemon(setDaemon);
@@ -119,8 +119,8 @@ public class QuartzSchedulerThread extends Thread {
         // start the underlying thread, but put this object into the 'paused'
         // state
         // so processing doesn't start yet...
-        paused = true;
-        halted = new AtomicBoolean(false);
+        paused = true;//使得当前线程阻塞暂停标记
+        halted = new AtomicBoolean(false);//关闭当前线程标记
     }
 
     /*
@@ -131,7 +131,7 @@ public class QuartzSchedulerThread extends Thread {
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
-    void setIdleWaitTime(long waitTime) {
+    void setIdleWaitTime(long waitTime) {//设置空闲等待时间
         idleWaitTime = waitTime;
         idleWaitVariablness = (int) (waitTime * 0.2);
     }
@@ -141,7 +141,7 @@ public class QuartzSchedulerThread extends Thread {
     }
 
     /**
-     * <p>
+     * <p> toggle：拨动   这里的含义应该是一个开关的功能
      * Signals the main processing loop to pause at the next possible point.
      * </p>
      */
@@ -158,13 +158,13 @@ public class QuartzSchedulerThread extends Thread {
     }
 
     /**
-     * <p>
+     * <p> 在可能的位置终止主循环
      * Signals the main processing loop to pause at the next possible point.
      * </p>
      */
     void halt(boolean wait) {
         synchronized (sigLock) {
-            halted.set(true);
+            halted.set(true);//设置终止标记
 
             if (paused) {
                 sigLock.notifyAll();
@@ -172,7 +172,7 @@ public class QuartzSchedulerThread extends Thread {
                 signalSchedulingChange(0);
             }
         }
-        
+
         if (wait) {
             boolean interrupted = false;
             try {
@@ -242,14 +242,22 @@ public class QuartzSchedulerThread extends Thread {
     @Override
     public void run() {
         boolean lastAcquireFailed = false;
-
-        while (!halted.get()) {
+        // while()无限循环，每次循环取出时间将到的trigger，触发对应的job，直到调度器线程被关闭
+        // halted是一个AtomicBoolean类变量，有个volatile int变量value，其get()方法仅仅简单的一句return value != 0，get()返回结果表示调度器线程是否开关
+        // volatile修饰的变量，存取必须走内存，不能通过cpu缓存，这样一来get总能获得set的最新真实值，因此volatile变量适合用来存放简单的状态信息
+        // 顾名思义，AtomicBoolean要解决原子性问题，但volatile并不能保证原子性，详见http://blog.csdn.net/wxwzy738/article/details/43238089
+        while (!halted.get()) {//原子变量，停止标记
             try {
                 // check if we're supposed to pause...
+                // sigLock是个Object对象，被用于加锁同步
+                // 需要用到wait()，必须加到synchronized块内
                 synchronized (sigLock) {
                     while (paused && !halted.get()) {
                         try {
-                            // wait until togglePause(false) is called...
+                            // wait until togglePause(false) is called...  启动后会阻塞在这里等待被唤醒
+                            // 这里会不断循环等待，直到QuartzScheduler.start()调用了togglePause(false)
+                            // 调用wait()，调度器线程进入休眠状态，同时sigLock锁被释放
+                            // togglePause(false)获得sigLock锁，将paused置为false，使调度器线程能够退出此循环，同时执行sigLock.notifyAll()唤醒调度器线程
                             sigLock.wait(1000L);
                         } catch (InterruptedException ignore) {
                         }
@@ -260,19 +268,22 @@ public class QuartzSchedulerThread extends Thread {
                     }
                 }
 
-                int availThreadCount = qsRsrcs.getThreadPool().blockForAvailableThreads();
+                int availThreadCount = qsRsrcs.getThreadPool().blockForAvailableThreads();//阻塞式的获取空闲线程，没有的话会阻塞在这里
+                // 如果线程池中的空闲线程个数 > 0
                 if(availThreadCount > 0) { // will always be true, due to semantics of blockForAvailableThreads...
 
-                    List<OperableTrigger> triggers = null;
+                    List<OperableTrigger> triggers = null;//等待触发
 
-                    long now = System.currentTimeMillis();
+                    long now = System.currentTimeMillis();//
 
-                    clearSignaledSchedulingChange();
+                    clearSignaledSchedulingChange();//可能是被唤醒而走到这里的，这里清除唤醒标记
                     try {
+                        // 获取马上到时间的trigger
+                        // 允许取出的trigger个数不能超过一个阀值，这个阀值是线程池个数与org.quartz.scheduler.batchTriggerAcquisitionMaxCount配置值间的最小者
                         triggers = qsRsrcs.getJobStore().acquireNextTriggers(
                                 now + idleWaitTime, Math.min(availThreadCount, qsRsrcs.getMaxBatchSize()), qsRsrcs.getBatchTimeWindow());
                         lastAcquireFailed = false;
-                        if (log.isDebugEnabled()) 
+                        if (log.isDebugEnabled())
                             log.debug("batch acquisition of " + (triggers == null ? 0 : triggers.size()) + " triggers");
                     } catch (JobPersistenceException jpe) {
                         if(!lastAcquireFailed) {
@@ -290,13 +301,13 @@ public class QuartzSchedulerThread extends Thread {
                         lastAcquireFailed = true;
                         continue;
                     }
-
+                    //判断是否有需要触发的任务
                     if (triggers != null && !triggers.isEmpty()) {
 
                         now = System.currentTimeMillis();
                         long triggerTime = triggers.get(0).getNextFireTime().getTime();
                         long timeUntilTrigger = triggerTime - now;
-                        while(timeUntilTrigger > 2) {
+                        while(timeUntilTrigger > 2) {//没有到执行时间在这等一会
                             synchronized (sigLock) {
                                 if (halted.get()) {
                                     break;
@@ -324,7 +335,7 @@ public class QuartzSchedulerThread extends Thread {
                         if(triggers.isEmpty())
                             continue;
 
-                        // set triggers to 'executing'
+                        // set triggers to 'executing' 功能
                         List<TriggerFiredResult> bndles = new ArrayList<TriggerFiredResult>();
 
                         boolean goAhead = true;
@@ -332,7 +343,7 @@ public class QuartzSchedulerThread extends Thread {
                             goAhead = !halted.get();
                         }
                         if(goAhead) {
-                            try {
+                            try {//进行真正调度前的判断处理，周期性执行的计算下一次的执行时间，放回时间tree中
                                 List<TriggerFiredResult> res = qsRsrcs.getJobStore().triggersFired(triggers);
                                 if(res != null)
                                     bndles = res;
@@ -349,7 +360,7 @@ public class QuartzSchedulerThread extends Thread {
                             }
 
                         }
-
+                        //遍历触发job执行
                         for (int i = 0; i < bndles.size(); i++) {
                             TriggerFiredResult result =  bndles.get(i);
                             TriggerFiredBundle bndle =  result.getTriggerFiredBundle();
@@ -369,7 +380,7 @@ public class QuartzSchedulerThread extends Thread {
                                 continue;
                             }
 
-                            JobRunShell shell = null;
+                            JobRunShell shell = null;//创建一个触发任务
                             try {
                                 shell = qsRsrcs.getJobRunShellFactory().createJobRunShell(bndle);
                                 shell.initialize(qs);
@@ -377,7 +388,9 @@ public class QuartzSchedulerThread extends Thread {
                                 qsRsrcs.getJobStore().triggeredJobComplete(triggers.get(i), bndle.getJobDetail(), CompletedExecutionInstruction.SET_ALL_JOB_TRIGGERS_ERROR);
                                 continue;
                             }
-
+                            // 执行与trigger绑定的job
+                            // shell是JobRunShell对象，实现了Runnable接口
+                            // SimpleThreadPool.runInThread(Runnable)从线程池空闲列表中取出一个工作线程执行WorkerThread.run(Runnable)
                             if (qsRsrcs.getThreadPool().runInThread(shell) == false) {
                                 // this case should never happen, as it is indicative of the
                                 // scheduler being shutdown or a bug in the thread pool or
@@ -391,11 +404,11 @@ public class QuartzSchedulerThread extends Thread {
 
                         continue; // while (!halted)
                     }
-                } else { // if(availThreadCount > 0)
+                } else { // if(availThreadCount > 0)  到这里说明没有空闲线程了
                     // should never happen, if threadPool.blockForAvailableThreads() follows contract
                     continue; // while (!halted)
                 }
-
+                //走的这里说明一次检测没有发现有要触发的任务，下面生成一个随机数休眠一会
                 long now = System.currentTimeMillis();
                 long waitTime = now + getRandomizedIdleWaitTime();
                 long timeUntilContinue = waitTime - now;

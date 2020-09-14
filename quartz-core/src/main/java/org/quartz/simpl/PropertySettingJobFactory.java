@@ -1,18 +1,18 @@
-/* 
- * Copyright 2001-2009 Terracotta, Inc. 
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not 
- * use this file except in compliance with the License. You may obtain a copy 
- * of the License at 
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0 
- *   
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT 
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the 
- * License for the specific language governing permissions and limitations 
+/*
+ * Copyright 2001-2009 Terracotta, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
  * under the License.
- * 
+ *
  */
 package org.quartz.simpl;
 
@@ -38,46 +38,46 @@ import org.quartz.spi.TriggerFiredBundle;
  * A JobFactory that instantiates the Job instance (using the default no-arg
  * constructor, or more specifically: <code>class.newInstance()</code>), and
  * then attempts to set all values from the <code>SchedulerContext</code> and
- * the <code>JobExecutionContext</code>'s merged <code>JobDataMap</code> onto 
+ * the <code>JobExecutionContext</code>'s merged <code>JobDataMap</code> onto
  * bean properties of the <code>Job</code>.
- * 
+ *
  * <p>Set the warnIfPropertyNotFound property to true if you'd like noisy logging in
  * the case of values in the JobDataMap not mapping to properties on your Job
  * class.  This may be useful for troubleshooting typos of property names, etc.
  * but very noisy if you regularly (and purposely) have extra things in your
  * JobDataMap.</p>
- * 
+ *
  * <p>Also of possible interest is the throwIfPropertyNotFound property which
  * will throw exceptions on unmatched JobDataMap keys.</p>
- * 
+ *
  * @see org.quartz.spi.JobFactory
  * @see SimpleJobFactory
  * @see SchedulerContext
  * @see org.quartz.JobExecutionContext#getMergedJobDataMap()
  * @see #setWarnIfPropertyNotFound(boolean)
  * @see #setThrowIfPropertyNotFound(boolean)
- * 
+ *
  * @author jhouse
  */
 public class PropertySettingJobFactory extends SimpleJobFactory {
     private boolean warnIfNotFound = false;
     private boolean throwIfNotFound = false;
-    
+
     @Override
     public Job newJob(TriggerFiredBundle bundle, Scheduler scheduler) throws SchedulerException {
 
         Job job = super.newJob(bundle, scheduler);
-        
+
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.putAll(scheduler.getContext());
         jobDataMap.putAll(bundle.getJobDetail().getJobDataMap());
         jobDataMap.putAll(bundle.getTrigger().getJobDataMap());
 
-        setBeanProps(job, jobDataMap);
-        
+        setBeanProps(job, jobDataMap);//把参数映射到job的属性字段上去
+
         return job;
     }
-    
+
     protected void setBeanProps(Object obj, JobDataMap data) throws SchedulerException {
 
         BeanInfo bi = null;
@@ -86,46 +86,46 @@ public class PropertySettingJobFactory extends SimpleJobFactory {
         } catch (IntrospectionException e) {
             handleError("Unable to introspect Job class.", e);
         }
-        
+
         PropertyDescriptor[] propDescs = bi.getPropertyDescriptors();
-        
+
         // Get the wrapped entry set so don't have to incur overhead of wrapping for
         // dirty flag checking since this is read only access
         for (Iterator<?> entryIter = data.getWrappedMap().entrySet().iterator(); entryIter.hasNext();) {
             Map.Entry<?,?> entry = (Map.Entry<?,?>)entryIter.next();
-            
+
             String name = (String)entry.getKey();
             String c = name.substring(0, 1).toUpperCase(Locale.US);
             String methName = "set" + c + name.substring(1);
-        
+
             java.lang.reflect.Method setMeth = getSetMethod(methName, propDescs);
-        
+
             Class<?> paramType = null;
             Object o = null;
-            
+
             try {
                 if (setMeth == null) {
                     handleError(
-                        "No setter on Job class " + obj.getClass().getName() + 
+                        "No setter on Job class " + obj.getClass().getName() +
                         " for property '" + name + "'");
                     continue;
                 }
-                
+
                 paramType = setMeth.getParameterTypes()[0];
                 o = entry.getValue();
-                
+
                 Object parm = null;
                 if (paramType.isPrimitive()) {
                     if (o == null) {
                         handleError(
-                            "Cannot set primitive property '" + name + 
-                            "' on Job class " + obj.getClass().getName() + 
+                            "Cannot set primitive property '" + name +
+                            "' on Job class " + obj.getClass().getName() +
                             " to null.");
                         continue;
                     }
 
                     if (paramType.equals(int.class)) {
-                        if (o instanceof String) {                            
+                        if (o instanceof String) {
                             parm = Integer.valueOf((String)o);
                         } else if (o instanceof Integer) {
                             parm = o;
@@ -179,54 +179,54 @@ public class PropertySettingJobFactory extends SimpleJobFactory {
                 } else if ((o != null) && (paramType.isAssignableFrom(o.getClass()))) {
                     parm = o;
                 }
-                
-                // If the parameter wasn't originally null, but we didn't find a 
+
+                // If the parameter wasn't originally null, but we didn't find a
                 // matching parameter, then we are stuck.
                 if ((o != null) && (parm == null)) {
                     handleError(
-                        "The setter on Job class " + obj.getClass().getName() + 
-                        " for property '" + name + 
-                        "' expects a " + paramType + 
+                        "The setter on Job class " + obj.getClass().getName() +
+                        " for property '" + name +
+                        "' expects a " + paramType +
                         " but was given " + o.getClass().getName());
                     continue;
                 }
-                                
+
                 setMeth.invoke(obj, new Object[]{ parm });
             } catch (NumberFormatException nfe) {
                 handleError(
-                    "The setter on Job class " + obj.getClass().getName() + 
-                    " for property '" + name + 
-                    "' expects a " + paramType + 
+                    "The setter on Job class " + obj.getClass().getName() +
+                    " for property '" + name +
+                    "' expects a " + paramType +
                     " but was given " + o.getClass().getName(), nfe);
             } catch (IllegalArgumentException e) {
                 handleError(
-                    "The setter on Job class " + obj.getClass().getName() + 
-                    " for property '" + name + 
-                    "' expects a " + paramType + 
+                    "The setter on Job class " + obj.getClass().getName() +
+                    " for property '" + name +
+                    "' expects a " + paramType +
                     " but was given " + o.getClass().getName(), e);
             } catch (IllegalAccessException e) {
                 handleError(
-                    "The setter on Job class " + obj.getClass().getName() + 
-                    " for property '" + name + 
+                    "The setter on Job class " + obj.getClass().getName() +
+                    " for property '" + name +
                     "' could not be accessed.", e);
             } catch (InvocationTargetException e) {
                 handleError(
-                    "The setter on Job class " + obj.getClass().getName() + 
-                    " for property '" + name + 
+                    "The setter on Job class " + obj.getClass().getName() +
+                    " for property '" + name +
                     "' could not be invoked.", e);
             }
         }
     }
-     
+
     private void handleError(String message) throws SchedulerException {
         handleError(message, null);
     }
-    
+
     private void handleError(String message, Exception e) throws SchedulerException {
         if (isThrowIfPropertyNotFound()) {
             throw new SchedulerException(message, e);
         }
-        
+
         if (isWarnIfPropertyNotFound()) {
             if (e == null) {
                 getLog().warn(message);
@@ -235,33 +235,33 @@ public class PropertySettingJobFactory extends SimpleJobFactory {
             }
         }
     }
-    
+
     private java.lang.reflect.Method getSetMethod(String name,
             PropertyDescriptor[] props) {
         for (int i = 0; i < props.length; i++) {
             java.lang.reflect.Method wMeth = props[i].getWriteMethod();
-        
+
             if(wMeth == null) {
                 continue;
             }
-            
+
             if(wMeth.getParameterTypes().length != 1) {
                 continue;
             }
-            
+
             if (wMeth.getName().equals(name)) {
                 return wMeth;
             }
         }
-        
+
         return null;
     }
 
     /**
      * Whether the JobInstantiation should fail and throw and exception if
-     * a key (name) and value (type) found in the JobDataMap does not 
+     * a key (name) and value (type) found in the JobDataMap does not
      * correspond to a proptery setter on the Job class.
-     *  
+     *
      * @return Returns the throwIfNotFound.
      */
     public boolean isThrowIfPropertyNotFound() {
@@ -270,9 +270,9 @@ public class PropertySettingJobFactory extends SimpleJobFactory {
 
     /**
      * Whether the JobInstantiation should fail and throw and exception if
-     * a key (name) and value (type) found in the JobDataMap does not 
+     * a key (name) and value (type) found in the JobDataMap does not
      * correspond to a proptery setter on the Job class.
-     *  
+     *
      * @param throwIfNotFound defaults to <code>false</code>.
      */
     public void setThrowIfPropertyNotFound(boolean throwIfNotFound) {
@@ -281,9 +281,9 @@ public class PropertySettingJobFactory extends SimpleJobFactory {
 
     /**
      * Whether a warning should be logged if
-     * a key (name) and value (type) found in the JobDataMap does not 
+     * a key (name) and value (type) found in the JobDataMap does not
      * correspond to a proptery setter on the Job class.
-     *  
+     *
      * @return Returns the warnIfNotFound.
      */
     public boolean isWarnIfPropertyNotFound() {
@@ -292,9 +292,9 @@ public class PropertySettingJobFactory extends SimpleJobFactory {
 
     /**
      * Whether a warning should be logged if
-     * a key (name) and value (type) found in the JobDataMap does not 
+     * a key (name) and value (type) found in the JobDataMap does not
      * correspond to a proptery setter on the Job class.
-     *  
+     *
      * @param warnIfNotFound defaults to <code>true</code>.
      */
     public void setWarnIfPropertyNotFound(boolean warnIfNotFound) {
